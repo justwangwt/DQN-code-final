@@ -13,7 +13,7 @@ serviceName_list=['compose_post_client','compose_creator_client','compose_text_c
 
 serviceName_dict={'compose_post_client':'(nginx-web-server,compose-post-service)',
              'compose_creator_client':'(compose-post-service,user-service)',
-             'compose_text_client':'(compose-post-service,user-service)',##
+             'compose_text_client':'(compose-post-service,text-service)',##
              'compose_creator_server':'(user-service,text-service)',
              'compose_urls_client':'(text-service,url-shorten-service)',
              'compose_user_mentions_client':'(text-service,user-mention-service)',

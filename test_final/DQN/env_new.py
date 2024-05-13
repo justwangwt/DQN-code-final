@@ -34,28 +34,28 @@ class CustomEnv():
         self.reward = 0
     
     #发送消息
-    def send_message(self):
-        host = '172.19.206.70'
-        port = 22
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((host, port))
-        try:
-            # 连接到目标主机
-            sock.connect((host, port))
-            print("连接成功")
-
-            # 将字典序列化为 JSON 字符串
-            message = json.dumps(self.result_dict)
-
-            # 发送消息
-            sock.sendall(message.encode())
-
-        except ConnectionRefusedError:
-            print("连接失败，请检查目标主机的 IP 地址和端口号是否正确。")
-
-        finally:
-            # 关闭连接
-            sock.close()
+    ##def send_message(self):
+    ##    host = '172.19.206.70'
+    ##    port = 22
+    ##    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ##    sock.connect((host, port))
+    ##    try:
+    ##        # 连接到目标主机
+    ##        sock.connect((host, port))
+    ##        print("连接成功")
+##
+    ##        # 将字典序列化为 JSON 字符串
+    ##        message = json.dumps(self.result_dict)
+##
+    ##        # 发送消息
+    ##        sock.sendall(message.encode())
+##
+    ##    except ConnectionRefusedError:
+    ##        print("连接失败，请检查目标主机的 IP 地址和端口号是否正确。")
+##
+    ##    finally:
+    ##        # 关闭连接
+    ##        sock.close()
 
 
     
@@ -74,15 +74,16 @@ class CustomEnv():
     
     #返回初始状态
     def get_initial_state(self):
+        self.state_space=[]
         self.reset()
         for container_name, container_state in container_states.items():
             # 添加容器对象的值到状态空间
             state = [
-                container_state.container1_cpu_usage,
-                container_state.container2_cpu_usage,
-                container_state.container1_memory_usage,
-                container_state.container2_memory_usage,
-                container_state.communication_delay  # communication_delay
+                float(container_state.container1_cpu_usage),
+                float(container_state.container2_cpu_usage),
+                float(container_state.container1_memory_usage),
+                float(container_state.container2_memory_usage),
+                float(container_state.communication_delay)  # communication_delay
             ]
             self.state_space.append(state)
            # 将状态空间转换为张量
@@ -97,9 +98,11 @@ class CustomEnv():
     #execute_action需要dqn循环调用，给出每一对容器的action
     #
     def execute_action(self,action):
+        self.state_space=[]
         #action01列表
         # 处理
         action = action.detach().numpy()
+        ##action=action.numpy()
         for container_name, container_state in container_states.items():
             #获取并删除action的第一个值
             self.result_dict[container_name] = action.ptp(0)#针对某一个容器对的action结果调用的返回结果
@@ -112,16 +115,19 @@ class CustomEnv():
         #     done = True
         # return done
             #发送消息
-            self.send_message()
-            time.sleep(5 * 60)
+            #self.send_message()-------------------------------------
+            #time.sleep(5 * 60)--------------------------------------
         
-            self.reset(self)
+            self.reset()
             #tool.load_data_function()
             #统计新排版后的reward值
             for container_name, container_state in container_states.items():
                 self.reward += container_state.communication_delay
+            
+            user_input=input("Please enter 1")
+            if user_input=="1":
 
-            next_state = self.get_initial_state(self)
+                next_state = self.get_initial_state()
 
 
             done = True

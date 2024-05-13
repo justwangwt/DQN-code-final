@@ -55,10 +55,10 @@ class Net(nn.Module):
         ##self.fc4.weight.normal_(0,0.1)
         ##self.fc5=nn.Linear(128,12)
         ##self.fc5.weight.normal_(0,0.1)
-        self.conv1=nn.Conv1d(11,32,kernel_size=3)
+        self.conv1=nn.Conv1d(12,32,kernel_size=3)
         self.fc1=nn.Linear(32,64)
         self.fc1.weight.data.normal_(0,0.1)
-        self.fc2=nn.Linear(64,11)
+        self.fc2=nn.Linear(64,12)
         self.fc2.weight.data.normal_(0,0.1)
     
     def forward(self,x):
@@ -74,8 +74,8 @@ class Net(nn.Module):
         self_out=F.relu(self.fc2(self_out))
         ##self_out=torch.sigmoid(self.fc2(x))
         self_out[self_out!=0]=1
-        self_out=self_out.view(11,1)
-        print(self_out)
+        self_out=self_out.view(12,1)
+        ##print(self_out)
         return self_out
     
     def num_flat_features(self,x):
@@ -94,24 +94,23 @@ class DQN(object):
 
         self.learn_step_counter = 0                  # for target updating
         self.memory_counter = 0          # for storing memory
-        self.memory = np.zeros((MEMORY_CAPACITY, 4))##########################################
+        self.memory = np.zeros((MEMORY_CAPACITY, 12,11))##########################################
         # self.memory = np.zeros((MEMORY_CAPACITY, env.state_space * 2 + 2), dtype=list)
         self.optimizer=torch.optim.Adam(self.main_Network.parameters(),LR)
         self.criterion=nn.BCELoss()
 
     def choose_Action(self,x):
         x=torch.unsqueeze(torch.FloatTensor(x),0)
-        if np.random.random()<EPSILON:
-            print(x)
-            action=self.main_Network.forward(x)
-        else:
-            action=np.random.randint(0,2)
+        print(x)
+        action=self.main_Network.forward(x)
+        
         return action
     
     def store_transition(self,s,a,r,s_):
-        transition=np.hstack((s,[a,r],s_))
+        transition=np.hstack((s,a,s_))
         index=self.memory_counter%MEMORY_CAPACITY
-        self.memory[index,:]=transition
+        print(index)
+        self.memory[index,:,:]=transition
         self.memory_counter+=1
         
     def learn(self):
@@ -154,12 +153,15 @@ for i in range(EPISODE):
         a=dqn.choose_Action(s)
         s_,r,done=env.execute_action(a)
         
-        ## 修改奖励 (不修改也可以，修改奖励只是为了更快地得到训练好的摆杆)
+        ## 修改奖励 (不修改也可以，修改奖励只是为了更快地得到训练好的摆杆)1
         #x, x_dot, theta, theta_dot = s_
         #r1 = (env.x_threshold - abs(x)) / env.x_threshold - 0.8
         #r2 = (env.theta_threshold_radians - abs(theta)) / env.theta_threshold_radians - 0.5
         #new_r = r1 + r2
-        
+        s=s.detach().numpy()
+        a=a.detach().numpy()
+        s_=s_.detach().numpy()
+        print(a,r)
         dqn.store_transition(s,a,r,s_)
         episode_reward_sum += r
         
